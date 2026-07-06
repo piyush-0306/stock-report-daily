@@ -1,15 +1,24 @@
 """
+=================================================
+
+Bangalore Realty Market Intelligence Agent
+
+Architecture
+
 Market Intelligence Agent
+        │
+        ├── Configuration Loader
+        ├── Stock Fetch Tool
+        ├── Market Data Parser
+        └── Google Sheets Tool
 
-Responsibilities
-
-1. Fetch latest stock data
-2. Validate responses
-3. Process market information
-4. Persist data to Google Sheets
-5. Report execution status
+The agent autonomously coordinates the
+daily workflow to collect, process,
+and persist stock market information.
 
 Developed using Google Antigravity IDE.
+
+=================================================
 """
 import os
 import sys
@@ -35,7 +44,7 @@ def load_config():
     with open(config_path, 'r', encoding='utf-8') as f:
         return json.load(f)
 
-def parse_moneycontrol_page(html, symbol):
+def market_data_parser(html, symbol):
     soup = BeautifulSoup(html, 'html.parser')
     
     # 1. Closing Price (NSE preferred, BSE fallback)
@@ -113,7 +122,7 @@ def stock_data_tool(session, stock):
                 return None
             time.sleep(2)
 
-def write_to_google_sheet_webapp(url, rows):
+def google_sheets_tool(url, rows):
     print(f"\nSending data to Google Sheets Web App...")
     payload = {
         "data": rows
