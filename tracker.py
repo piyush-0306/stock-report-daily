@@ -1,3 +1,16 @@
+"""
+Market Intelligence Agent
+
+Responsibilities
+
+1. Fetch latest stock data
+2. Validate responses
+3. Process market information
+4. Persist data to Google Sheets
+5. Report execution status
+
+Developed using Google Antigravity IDE.
+"""
 import os
 import sys
 import json
