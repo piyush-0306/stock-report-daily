@@ -195,7 +195,7 @@ def write_to_google_sheet_service_account(sheets_config, rows):
         print(f"Error writing to Google Sheets via Service Account: {e}")
         return False
 
-def main():
+def run_market_intelligence_agent():
     print(f"=== Bangalore Realty Stocks Tracker - Run started at {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ===")
     config = load_config()
     
@@ -246,4 +246,4 @@ def main():
         sys.exit(1)
 
 if __name__ == "__main__":
-    main()
+    run_market_intelligence_agent()
