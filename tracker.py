@@ -87,7 +87,7 @@ def parse_moneycontrol_page(html, symbol):
         "market_cap_cr": mkt_cap_val
     }
 
-def fetch_stock_data(session, stock):
+def stock_data_tool(session, stock):
     symbol = stock["symbol"]
     url = stock["moneycontrol_url"]
     
