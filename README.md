@@ -1,31 +1,123 @@
 # Bangalore Realty Market Intelligence Agent
+Automated monitoring of Bangalore real estate stocks using Python, Google Antigravity and GitHub Actions. 
 
-This project automates the daily tracking of publicly listed real estate companies based in Bangalore that are part of CREDAI. Every day, the script fetches live stock market updates (closing rate, price change, percentage movement, and NSE market capitalization) from Moneycontrol and uploads it directly to your Google Sheet.
+## Problem
 
-                GitHub Actions
-                      │
-                      ▼
-      Market Intelligence Agent
-              │
-      ┌───────┴────────┐
-      │                │
-Stock Fetch Tool   Config Loader
-      │
-      ▼
-Market Data Parser
-      │
-      ▼
-Google Sheets Tool
-      │
-      ▼
-Google Sheet
+Tracking Bangalore real estate stocks every day requires visiting multiple financial websites, manually recording prices and maintaining historical records.
 
-Developed using
+## Solution
 
-• Google Antigravity IDE
-• Google Antigravity Web
-• GitHub Actions
-• Google Apps Script
+The Bangalore Realty Market Intelligence Agent automates the complete workflow.
+
+The agent:
+
+- Retrieves live stock data from Moneycontrol
+- Parses daily market information
+- Structures the data
+- Automatically stores the results in Google Sheets
+- Runs daily through GitHub Actions
+
+This eliminates manual data collection and creates a continuously growing historical dataset.
+
+## Architecture
+
+```text
+                 GitHub Actions
+                        │
+                        ▼
+        Market Intelligence Agent
+                        │
+        ┌───────────────┴───────────────┐
+        │                               │
+ Configuration Loader           Stock Fetch Tool
+                                        │
+                                        ▼
+                             Market Data Parser
+                                        │
+                                        ▼
+                              Google Sheets Tool
+                                        │
+                                        ▼
+                                 Google Sheets
+```
+## Technologies
+
+- Python
+- Requests
+- BeautifulSoup
+- Google Apps Script
+- Google Sheets
+- GitHub Actions
+- Google Antigravity IDE
+- Google Antigravity Web
+
+## Features
+
+- Daily automated execution
+- Cloud deployment through GitHub Actions
+- Moneycontrol stock data extraction
+- Automatic Google Sheets updates
+- Configurable stock list
+- Retry logic for failed requests
+- Error handling and execution logging
+
+## Development Process
+
+The project was developed using Google Antigravity IDE and Google Antigravity Web.
+
+Antigravity was used throughout development for:
+
+- code generation
+- debugging
+- workflow refinement
+- documentation
+- deployment guidance
+- iterative improvements
+
+The final project is version-controlled on GitHub and executes automatically through GitHub Actions.
+
+## Repository Structure
+
+```text
+tracker.py
+config.json
+requirements.txt
+README.md
+.github/
+    workflows/
+        daily_run.yml
+```
+## Setup
+
+1. Clone the repository
+
+2. Install dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+3. Configure config.json
+
+4. Deploy the Google Apps Script
+
+5. Run
+
+```bash
+python tracker.py
+```
+
+or allow GitHub Actions to execute automatically.
+
+## Future Improvements
+
+- AI-generated daily market summaries
+- Trend analysis
+- Historical dashboards
+- Email notifications
+- Portfolio tracking
+- Interactive market insights
+
 
 ## Tracked Companies
 1. **Prestige Estates Projects Ltd** (`PRESTIGE`)
