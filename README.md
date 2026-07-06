@@ -1,6 +1,31 @@
-# Bangalore Realty Stocks Tracker
+# Bangalore Realty Market Intelligence Agent
 
 This project automates the daily tracking of publicly listed real estate companies based in Bangalore that are part of CREDAI. Every day, the script fetches live stock market updates (closing rate, price change, percentage movement, and NSE market capitalization) from Moneycontrol and uploads it directly to your Google Sheet.
+
+                GitHub Actions
+                      │
+                      ▼
+      Market Intelligence Agent
+              │
+      ┌───────┴────────┐
+      │                │
+Stock Fetch Tool   Config Loader
+      │
+      ▼
+Market Data Parser
+      │
+      ▼
+Google Sheets Tool
+      │
+      ▼
+Google Sheet
+
+Developed using
+
+• Google Antigravity IDE
+• Google Antigravity Web
+• GitHub Actions
+• Google Apps Script
 
 ## Tracked Companies
 1. **Prestige Estates Projects Ltd** (`PRESTIGE`)
