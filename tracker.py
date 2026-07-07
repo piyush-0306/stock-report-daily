@@ -181,8 +181,6 @@ def write_to_google_sheet_service_account(sheets_config, rows):
         print(f"Opening spreadsheet '{spreadsheet_name}', worksheet '{sheet_name}'...")
         sheet = client.open(spreadsheet_name).worksheet(sheet_name)
         
-        # Prepare rows to append (convert dicts to lists in the correct column order)
-        # Columns: Date, Time, Symbol, Name, Closing Rate, Change Amount, Percent Movement, Market Cap (Cr)
         rows_to_append = []
         for r in rows:
             rows_to_append.append([
@@ -205,11 +203,16 @@ def write_to_google_sheet_service_account(sheets_config, rows):
         return False
 
 def run_market_intelligence_agent():
-    print(f"=== Bangalore Realty Stocks Tracker - Run started at {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ===")
+    # Force alignment to Indian Standard Time (IST) regardless of host runtime architecture (like GitHub Actions)
+    utc_now = datetime.datetime.now(datetime.timezone.utc)
+    ist_offset = datetime.timedelta(hours=5, minutes=30)
+    ist_now = utc_now + ist_offset
+
+    print(f"=== Bangalore Realty Stocks Tracker - Run started at {ist_now.strftime('%Y-%m-%d %H:%M:%S')} IST ===")
     config = load_config()
     
-    today_date = datetime.datetime.now().strftime('%Y-%m-%d')
-    fetch_time = datetime.datetime.now().strftime('%H:%M:%S')
+    today_date = ist_now.strftime('%Y-%m-%d')
+    fetch_time = ist_now.strftime('%H:%M:%S')
     
     # Setup HTTP Session to reuse TCP connection (increases speed and resilience)
     session = requests.Session()
@@ -226,7 +229,9 @@ def run_market_intelligence_agent():
                 "name": stock["name"],
                 "closing_rate": data["price"],
                 "change_amount": data["change_amount"],
-                "percent_movement": f"{data['change_percent']}%",
+                # Passing as a raw decimal value instead of a text string allows 
+                # native mathematical/graph formatting configurations inside Google Sheets.
+                "percent_movement": data["change_percent"] / 100.0,
                 "market_cap_cr": data["market_cap_cr"]
             })
         time.sleep(1.5) # Politeness delay between requests
@@ -243,7 +248,6 @@ def run_market_intelligence_agent():
         if not url or "YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE" in url:
             print("\n[Warning] Google Sheets Web App URL is not configured in config.json")
             print("Please configure 'web_app_url' in config.json to upload data automatically.")
-            # Still output the results to stdout so they can see them
             print("\nFetched Stock Data:")
             print(json.dumps(results, indent=2))
             sys.exit(0)
