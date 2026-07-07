@@ -113,7 +113,7 @@ def stock_data_tool(session, stock):
                 time.sleep(2)
                 continue
             
-            data = parse_moneycontrol_page(response.text, symbol)
+            data = market_data_parser(response.text, symbol)
             print(f"  Success: Price={data['price']}, Change={data['change_amount']} ({data['change_percent']}%), Market Cap={data['market_cap_cr']} Cr")
             return data
         except Exception as e:
@@ -217,7 +217,7 @@ def run_market_intelligence_agent():
     
     results = []
     for stock in config["stocks"]:
-        data = fetch_stock_data(session, stock)
+        data = stock_data_tool(session, stock)
         if data:
             results.append({
                 "date": today_date,
@@ -247,7 +247,7 @@ def run_market_intelligence_agent():
             print("\nFetched Stock Data:")
             print(json.dumps(results, indent=2))
             sys.exit(0)
-        write_to_google_sheet_webapp(url, results)
+        google_sheets_tool(url, results)
     elif method == "service_account":
         write_to_google_sheet_service_account(sheets_config, results)
     else:
