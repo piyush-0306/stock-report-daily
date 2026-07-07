@@ -35,7 +35,7 @@
     "method": "web_app",
     "web_app_url": "https://script.google.com/macros/s/AKfycbwNm5Tc6FfErJgLKjZnE-8bMiyciLaxEuj-zPQ3HSvHAVkh4a2TPSs1vyptERAdGcp3BA/exec",
     "service_account_json_path": "credentials.json",
-    "spreadsheet_name": "Bangalore Realty Stocks Tracker",
+    "spreadsheet_name": "Untitled spreadsheet",
     "sheet_name": "Sheet1"
   }
 }
