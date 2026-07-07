@@ -96,7 +96,7 @@ def market_data_parser(html, symbol):
         "market_cap_cr": mkt_cap_val
     }
 
-def stock_data_tool(session, stock):
+def fetch_stock_data(session, stock):
     symbol = stock["symbol"]
     url = stock["moneycontrol_url"]
     
@@ -220,7 +220,7 @@ def run_market_intelligence_agent():
     
     results = []
     for stock in config["stocks"]:
-        data = stock_data_tool(session, stock)
+        data = fetch_stock_data(session, stock)
         if data:
             results.append({
                 "date": today_date,
