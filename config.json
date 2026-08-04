@@ -1,0 +1,71 @@
+{
+  "stocks": [
+    {
+      "symbol": "AJMERA",
+      "name": "Ajmera Realty & Infra India Ltd",
+      "moneycontrol_url": "https://www.moneycontrol.com/india/stockpricequote/constructioncontracting-real-estate/ajmerarealtyinfraindia/ARI03"
+    },
+    {
+      "symbol": "BRIGADE",
+      "name": "Brigade Enterprises Ltd",
+      "moneycontrol_url": "https://www.moneycontrol.com/india/stockpricequote/constructioncontracting-real-estate/brigadeenterprises/BE08"
+    },
+    {
+      "symbol": "GODREJPROP",
+      "name": "Godrej Properties Ltd",
+      "moneycontrol_url": "https://www.moneycontrol.com/india/stockpricequote/constructioncontracting-real-estate/godrejproperties/GP11"
+    },
+    {
+      "symbol": "KOLTEPATIL",
+      "name": "Kolte-Patil Developers Ltd",
+      "moneycontrol_url": "https://www.moneycontrol.com/india/stockpricequote/constructioncontracting-real-estate/kolte-patildevelopers/KD07"
+    },
+    {
+      "symbol": "MAHLIFE",
+      "name": "Mahindra Lifespace Developers Ltd",
+      "moneycontrol_url": "https://www.moneycontrol.com/india/stockpricequote/constructioncontracting-civil/mahindralifespacedevelopers/MLD"
+    },
+    {
+      "symbol": "NCC",
+      "name": "NCC Ltd",
+      "moneycontrol_url": "https://www.moneycontrol.com/india/stockpricequote/constructioncontracting-civil/ncc/NCC01"
+    },
+    {
+      "symbol": "PHOENIXLTD",
+      "name": "The Phoenix Mills Ltd",
+      "moneycontrol_url": "https://www.moneycontrol.com/india/stockpricequote/constructioncontracting-real-estate/phoenixmills/PM02"
+    },
+    {
+      "symbol": "PRESTIGE",
+      "name": "Prestige Estates Projects Ltd",
+      "moneycontrol_url": "https://www.moneycontrol.com/india/stockpricequote/constructioncontracting-real-estate/prestigeestatesprojects/PEP02"
+    },
+    {
+      "symbol": "PURVA",
+      "name": "Puravankara Limited",
+      "moneycontrol_url": "https://www.moneycontrol.com/india/stockpricequote/constructioncontracting-real-estate/puravankara/PP01"
+    },
+    {
+      "symbol": "RAMKY",
+      "name": "Ramky Infrastructure Ltd",
+      "moneycontrol_url": "https://www.moneycontrol.com/india/stockpricequote/constructioncontracting-civil/ramkyinfrastructure/RI12"
+    },
+    {
+      "symbol": "SHRIRAMPPS",
+      "name": "Shriram Properties Limited",
+      "moneycontrol_url": "https://www.moneycontrol.com/india/stockpricequote/construction-residentialcommercial-complexes/shriramproperties/SP21"
+    },
+    {
+      "symbol": "SOBHA",
+      "name": "Sobha Limited",
+      "moneycontrol_url": "https://www.moneycontrol.com/india/stockpricequote/constructioncontracting-real-estate/sobha/SD6"
+    }
+  ],
+  "google_sheets": {
+    "method": "web_app",
+    "web_app_url": "https://script.google.com/macros/s/AKfycbwNm5Tc6FfErJgLKjZnE-8bMiyciLaxEuj-zPQ3HSvHAVkh4a2TPSs1vyptERAdGcp3BA/exec",
+    "service_account_json_path": "credentials.json",
+    "spreadsheet_name": "Bangalore Realty Stocks Tracker",
+    "sheet_name": "Sheet1"
+  }
+}
