@@ -118,18 +118,9 @@ def stock_data_tool(session, stock):
             change = meta.get('change', 0.0)
             pChange = meta.get('pChange', 0.0)
             
-            # Market Cap in Cr: calculated using official NSE issued share size & official price
-            issued_size = trade.get('issuedSize', 0)
+            # Market Cap in Cr directly from NSE tradeInfo.totalMarketCap
             raw_mkt_cap = trade.get('totalMarketCap', 0.0)
-            
-            if issued_size and price:
-                mkt_cap_cr = (issued_size * price) / 10_000_000
-            elif raw_mkt_cap:
-                mkt_cap_cr = raw_mkt_cap / 10_000_000
-            else:
-                mkt_cap_cr = 0.0
-                
-            mkt_cap_cr = round(mkt_cap_cr, 2)
+            mkt_cap_cr = round(raw_mkt_cap / 10_000_000, 2) if raw_mkt_cap else 0.0
             
             print(f"  Success: Price={price:.2f}, Change={change:.2f} ({pChange:.2f}%), Market Cap={mkt_cap_cr:.2f} Cr")
             
