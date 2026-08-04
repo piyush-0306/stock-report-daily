@@ -141,9 +141,10 @@ def stock_data_tool(session, stock):
 # Stores processed stock information
 # ----------------------------------------------------------
 
-def google_sheets_tool(url, rows):
+def google_sheets_tool(url, rows, sheet_name=None):
     print(f"\nSending data to Google Sheets Web App...")
     payload = {
+        "sheet_name": sheet_name or datetime.datetime.now().strftime('%d-%m-%Y'),
         "data": rows
     }
     try:
@@ -274,7 +275,8 @@ def run_market_intelligence_agent():
             print("\nFetched Stock Data:")
             print(json.dumps(results, indent=2))
             sys.exit(0)
-        google_sheets_tool(url, results)
+        today_sheet_name = datetime.datetime.now().strftime('%d-%m-%Y')
+        google_sheets_tool(url, results, sheet_name=today_sheet_name)
     elif method == "service_account":
         write_to_google_sheet_service_account(sheets_config, results)
     else:
