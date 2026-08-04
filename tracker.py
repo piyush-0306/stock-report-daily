@@ -56,7 +56,16 @@ from bs4 import BeautifulSoup
 sys.stdout.reconfigure(encoding='utf-8')
 
 HEADERS = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+    'Connection': 'keep-alive',
+    'Cache-Control': 'max-age=0',
+    'DNT': '1',
+    'Upgrade-Insecure-Requests': '1',
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    'Sec-Fetch-User': '?1',
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+    'Sec-Fetch-Site': 'none',
+    'Sec-Fetch-Mode': 'navigate',
+    'Accept-Language': 'en-US,en;q=0.9,hi;q=0.8',
 }
 
 # ----------------------------------------------------------
@@ -73,85 +82,17 @@ def load_config():
         return json.load(f)
 
 # ----------------------------------------------------------
-# Market Data Parser
-# Extracts price, movement and market cap
-# ----------------------------------------------------------
-
-def market_data_parser(html, symbol):
-    soup = BeautifulSoup(html, 'html.parser')
-    
-    # 1. Closing Price (NSE preferred, BSE fallback)
-    price_elem = soup.find(class_="nsecp")
-    if not price_elem:
-        price_elem = soup.find(class_="bsecp")
-    
-    if not price_elem:
-        raise ValueError(f"Could not find stock price element (class 'nsecp'/'bsecp')")
-    
-    price_val = float(price_elem.text.strip().replace(",", ""))
-    
-    # 2. Change and Percent Change (NSE preferred, BSE fallback)
-    change_elem = soup.find(id="nsechange")
-    if not change_elem:
-        change_elem = soup.find(class_="nsechange")
-    if not change_elem:
-        change_elem = soup.find(id="bsechange")
-    if not change_elem:
-        change_elem = soup.find(class_="bsechange")
-        
-    if not change_elem:
-        raise ValueError(f"Could not find price change element (id/class 'nsechange'/'bsechange')")
-        
-    change_text = change_elem.text.strip()
-    # Match: change_amount (percent_change%)
-    # E.g., "48.80 (3.00%)" or "-12.50 (-0.80%)"
-    match = re.search(r"([+-]?[0-9,.]+)\s*\(\s*([+-]?[0-9,.]+)%\s*\)", change_text)
-    if not match:
-        raise ValueError(f"Could not parse change text format '{change_text}'")
-        
-    change_amt = float(match.group(1).replace(",", ""))
-    change_pct = float(match.group(2).replace(",", ""))
-    
-    # 3. Market Cap in Rs. Cr. (NSE preferred, BSE fallback)
-    mkt_cap_elem = soup.find(class_="nsemktcap")
-    if not mkt_cap_elem:
-        mkt_cap_elem = soup.find(class_="bsemktcap")
-        
-    if not mkt_cap_elem:
-        raise ValueError(f"Could not find market cap element (class 'nsemktcap'/'bsemktcap')")
-        
-    mkt_cap_val = float(mkt_cap_elem.text.strip().replace(",", ""))
-    
-    # Moneycontrol's static HTML only contains the BSE-based market cap.
-    # If we are using the NSE price, recalculate the market cap to match the NSE price.
-    if 'nsecp' in price_elem.get('class', []):
-        bse_price_elem = soup.find(class_="bsecp")
-        if bse_price_elem:
-            try:
-                bse_price_val = float(bse_price_elem.text.strip().replace(",", ""))
-                if bse_price_val > 0:
-                    mkt_cap_val = (mkt_cap_val / bse_price_val) * price_val
-                    mkt_cap_val = round(mkt_cap_val, 2)
-            except Exception:
-                pass # Fallback to scraped market cap on any parsing error
-                
-    return {
-        "price": price_val,
-        "change_amount": change_amt,
-        "change_percent": change_pct,
-        "market_cap_cr": mkt_cap_val
-    }
-
-# ----------------------------------------------------------
 # Stock Fetch Tool
-# Retrieves stock data from Moneycontrol
+# Retrieves stock data directly from NSE India API
 # ----------------------------------------------------------
 
 def stock_data_tool(session, stock):
     symbol = stock["symbol"]
-    url = stock["moneycontrol_url"]
+    name = stock["name"]
     
-    print(f"Fetching data for {symbol} ({stock['name']})...")
+    print(f"Fetching data for {symbol} ({name})...")
+    
+    url = f"https://www.nseindia.com/api/NextApi/apiClient/GetQuoteApi?functionName=getSymbolData&marketType=N&series=EQ&symbol={symbol}"
     
     max_retries = 3
     for attempt in range(1, max_retries + 1):
@@ -164,9 +105,37 @@ def stock_data_tool(session, stock):
                 time.sleep(2)
                 continue
             
-            data = market_data_parser(response.text, symbol)
-            print(f"  Success: Price={data['price']}, Change={data['change_amount']} ({data['change_percent']}%), Market Cap={data['market_cap_cr']} Cr")
-            return data
+            data = response.json()
+            eq_resp = data.get('equityResponse', [{}])[0]
+            if not eq_resp:
+                raise ValueError(f"No equityResponse data found in response for {symbol}")
+                
+            meta = eq_resp.get('metaData', {})
+            trade = eq_resp.get('tradeInfo', {})
+            
+            # If market is closed, closePrice is preferred. If open, lastPrice.
+            price = meta.get('closePrice') or meta.get('lastPrice') or meta.get('iep') or 0.0
+            change = meta.get('change', 0.0)
+            pChange = meta.get('pChange', 0.0)
+            
+            # Market Cap in Cr
+            raw_mkt_cap = trade.get('totalMarketCap', 0.0)
+            if raw_mkt_cap and price and trade.get('lastPrice'):
+                # Recalculate using closing price for exact closing market cap
+                mkt_cap_cr = (raw_mkt_cap / trade.get('lastPrice')) * price / 10_000_000
+            else:
+                mkt_cap_cr = raw_mkt_cap / 10_000_000
+                
+            mkt_cap_cr = round(mkt_cap_cr, 2)
+            
+            print(f"  Success: Price={price:.2f}, Change={change:.2f} ({pChange:.2f}%), Market Cap={mkt_cap_cr:.2f} Cr")
+            
+            return {
+                "price": price,
+                "change_amount": change,
+                "change_percent": pChange,
+                "market_cap_cr": mkt_cap_cr
+            }
         except Exception as e:
             print(f"  [Attempt {attempt}/{max_retries}] Error fetching/parsing {symbol}: {e}")
             if attempt == max_retries:
@@ -271,6 +240,14 @@ def run_market_intelligence_agent():
     session = requests.Session()
     session.headers.update(HEADERS)
     
+    # Initialize cookies on nseindia.com to avoid 403 blocks
+    print("Initializing session on nseindia.com...")
+    try:
+        session.get("https://www.nseindia.com", timeout=15)
+        time.sleep(2)  # Delay to let cookies settle
+    except Exception as e:
+        print(f"Warning: Failed to initialize session cookies: {e}")
+        
     results = []
     for stock in config["stocks"]:
         data = stock_data_tool(session, stock)
@@ -285,7 +262,7 @@ def run_market_intelligence_agent():
                 "percent_movement": f"{data['change_percent']}%",
                 "market_cap_cr": data["market_cap_cr"]
             })
-        time.sleep(1.5) # Politeness delay between requests
+        time.sleep(2.0) # Politeness delay between requests
             
     if not results:
         print("No stock data was successfully fetched. Exiting.")
