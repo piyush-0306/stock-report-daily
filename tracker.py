@@ -122,6 +122,19 @@ def market_data_parser(html, symbol):
         
     mkt_cap_val = float(mkt_cap_elem.text.strip().replace(",", ""))
     
+    # Moneycontrol's static HTML only contains the BSE-based market cap.
+    # If we are using the NSE price, recalculate the market cap to match the NSE price.
+    if 'nsecp' in price_elem.get('class', []):
+        bse_price_elem = soup.find(class_="bsecp")
+        if bse_price_elem:
+            try:
+                bse_price_val = float(bse_price_elem.text.strip().replace(",", ""))
+                if bse_price_val > 0:
+                    mkt_cap_val = (mkt_cap_val / bse_price_val) * price_val
+                    mkt_cap_val = round(mkt_cap_val, 2)
+            except Exception:
+                pass # Fallback to scraped market cap on any parsing error
+                
     return {
         "price": price_val,
         "change_amount": change_amt,
