@@ -202,16 +202,12 @@ def write_to_google_sheet_service_account(sheets_config, rows):
         sheet = client.open(spreadsheet_name).worksheet(sheet_name)
         
         # Prepare rows to append (convert dicts to lists in the correct column order)
-        # Columns: Date, Time, Symbol, Name, Closing Rate, Change Amount, Percent Movement, Market Cap (Cr)
+        # Columns: Company, Closing Price, % Change, Market cap (Rs. Cr.)
         rows_to_append = []
         for r in rows:
             rows_to_append.append([
-                r["date"],
-                r["time"],
-                r["symbol"],
                 r["name"],
                 r["closing_rate"],
-                r["change_amount"],
                 r["percent_movement"],
                 r["market_cap_cr"]
             ])
@@ -248,12 +244,8 @@ def run_market_intelligence_agent():
         data = stock_data_tool(session, stock)
         if data:
             results.append({
-                "date": today_date,
-                "time": fetch_time,
-                "symbol": stock["symbol"],
                 "name": stock["name"],
                 "closing_rate": data["price"],
-                "change_amount": data["change_amount"],
                 "percent_movement": f"{data['change_percent']}%",
                 "market_cap_cr": data["market_cap_cr"]
             })
