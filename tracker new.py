@@ -118,13 +118,16 @@ def stock_data_tool(session, stock):
             change = meta.get('change', 0.0)
             pChange = meta.get('pChange', 0.0)
             
-            # Market Cap in Cr
+            # Market Cap in Cr: calculated using official NSE issued share size & official price
+            issued_size = trade.get('issuedSize', 0)
             raw_mkt_cap = trade.get('totalMarketCap', 0.0)
-            if raw_mkt_cap and price and trade.get('lastPrice'):
-                # Recalculate using closing price for exact closing market cap
-                mkt_cap_cr = (raw_mkt_cap / trade.get('lastPrice')) * price / 10_000_000
-            else:
+            
+            if issued_size and price:
+                mkt_cap_cr = (issued_size * price) / 10_000_000
+            elif raw_mkt_cap:
                 mkt_cap_cr = raw_mkt_cap / 10_000_000
+            else:
+                mkt_cap_cr = 0.0
                 
             mkt_cap_cr = round(mkt_cap_cr, 2)
             
@@ -153,7 +156,7 @@ def google_sheets_tool(url, rows):
         "data": rows
     }
     try:
-        response = requests.post(url, json=payload, headers={"Content-Type": "application/json"}, timeout=30)
+        response = requests.post(url, json=payload, timeout=30)
         print(f"Web App Response Status: {response.status_code}")
         print(f"Web App Response Body: {response.text}")
         if response.status_code == 200:
