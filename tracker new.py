@@ -166,9 +166,22 @@ def stock_data_tool(session, stock):
             trade = eq_resp.get('tradeInfo', {})
             
             # If market is closed, closePrice is preferred. If open, lastPrice.
-            price = meta.get('closePrice') or meta.get('lastPrice') or meta.get('iep') or 0.0
-            change = meta.get('change', 0.0)
-            pChange = meta.get('pChange', 0.0)
+            close_price = meta.get('closePrice')
+            last_price = meta.get('lastPrice')
+            iep_price = meta.get('iep')
+            price = close_price or last_price or iep_price or 0.0
+            
+            prev_close = meta.get('previousClose', 0.0)
+            
+            # Use official closing price change & % change when market is closed
+            if close_price and prev_close and prev_close > 0:
+                change = close_price - prev_close
+                pChange = ((close_price - prev_close) / prev_close) * 100
+            else:
+                change = meta.get('change', 0.0)
+                pChange = meta.get('pChange', 0.0)
+                
+            pChange = round(pChange, 2)
             
             # Market Cap in Cr directly from NSE tradeInfo.totalMarketCap
             raw_mkt_cap = trade.get('totalMarketCap', 0.0)
