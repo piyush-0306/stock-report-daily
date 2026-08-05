@@ -82,6 +82,56 @@ def load_config():
         return json.load(f)
 
 # ----------------------------------------------------------
+# Indices Fetch Tool
+# Retrieves NIFTY 50, SENSEX, NIFTY REALTY data
+# ----------------------------------------------------------
+
+def fetch_indices_tool(session):
+    print("Fetching NIFTY 50, SENSEX, and NIFTY REALTY indices...")
+    indices = {}
+    
+    # 1. Fetch NIFTY 50 & NIFTY REALTY from NSE
+    try:
+        url = "https://www.nseindia.com/api/allIndices"
+        r = session.get(url, timeout=15)
+        if r.status_code == 200:
+            data = r.json().get('data', [])
+            for idx in data:
+                iname = idx.get('index')
+                if iname in ['NIFTY 50', 'NIFTY REALTY']:
+                    last_val = round(float(idx.get('last', 0.0)), 2)
+                    pct_val = round(float(idx.get('percentChange', 0.0)), 2)
+                    indices[iname] = {
+                        "name": iname,
+                        "closing_rate": last_val,
+                        "percent_movement": f"{pct_val}%",
+                        "market_cap_cr": "-"
+                    }
+    except Exception as e:
+        print(f"  Warning: Failed to fetch NSE indices: {e}")
+
+    # 2. Fetch SENSEX from Yahoo Finance
+    try:
+        import yfinance as yf
+        ticker = yf.Ticker("^BSESN")
+        fast_info = ticker.fast_info
+        last_price = fast_info.last_price
+        prev_close = fast_info.previous_close
+        if last_price and prev_close:
+            p_change = ((last_price - prev_close) / prev_close) * 100
+            indices['SENSEX'] = {
+                "name": "SENSEX",
+                "closing_rate": round(float(last_price), 2),
+                "percent_movement": f"{round(float(p_change), 2)}%",
+                "market_cap_cr": "-"
+            }
+    except Exception as e:
+        print(f"  Warning: Failed to fetch SENSEX: {e}")
+
+    order = ['NIFTY 50', 'SENSEX', 'NIFTY REALTY']
+    return [indices[k] for k in order if k in indices]
+
+# ----------------------------------------------------------
 # Stock Fetch Tool
 # Retrieves stock data directly from NSE India API
 # ----------------------------------------------------------
@@ -240,6 +290,12 @@ def run_market_intelligence_agent():
         print(f"Warning: Failed to initialize session cookies: {e}")
         
     results = []
+    
+    # 1. Fetch Market Indices (NIFTY 50, SENSEX, NIFTY REALTY)
+    indices_data = fetch_indices_tool(session)
+    results.extend(indices_data)
+    
+    # 2. Fetch 12 Realty Stocks
     for stock in config["stocks"]:
         data = stock_data_tool(session, stock)
         if data:
