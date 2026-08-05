@@ -100,12 +100,13 @@ def fetch_indices_tool(session):
                 iname = idx.get('index')
                 if iname in ['NIFTY 50', 'NIFTY REALTY']:
                     last_val = round(float(idx.get('last', 0.0)), 2)
+                    var_val = round(float(idx.get('variation', 0.0)), 2)
                     pct_val = round(float(idx.get('percentChange', 0.0)), 2)
                     indices[iname] = {
                         "name": iname,
-                        "closing_rate": last_val,
-                        "percent_movement": f"{pct_val}%",
-                        "market_cap_cr": "-"
+                        "closing_value": last_val,
+                        "points_change": var_val,
+                        "percent_movement": f"{pct_val}%"
                     }
     except Exception as e:
         print(f"  Warning: Failed to fetch NSE indices: {e}")
@@ -118,12 +119,13 @@ def fetch_indices_tool(session):
         last_price = fast_info.last_price
         prev_close = fast_info.previous_close
         if last_price and prev_close:
-            p_change = ((last_price - prev_close) / prev_close) * 100
+            change_pts = last_price - prev_close
+            p_change = (change_pts / prev_close) * 100
             indices['SENSEX'] = {
                 "name": "SENSEX",
-                "closing_rate": round(float(last_price), 2),
-                "percent_movement": f"{round(float(p_change), 2)}%",
-                "market_cap_cr": "-"
+                "closing_value": round(float(last_price), 2),
+                "points_change": round(float(change_pts), 2),
+                "percent_movement": f"{round(float(p_change), 2)}%"
             }
     except Exception as e:
         print(f"  Warning: Failed to fetch SENSEX: {e}")
@@ -191,11 +193,12 @@ def stock_data_tool(session, stock):
 # Stores processed stock information
 # ----------------------------------------------------------
 
-def google_sheets_tool(url, rows, sheet_name=None):
+def google_sheets_tool(url, rows, indices=None, sheet_name=None):
     print(f"\nSending data to Google Sheets Web App...")
     payload = {
         "sheet_name": sheet_name or datetime.datetime.now().strftime('%d-%m-%Y'),
-        "data": rows
+        "data": rows,
+        "indices": indices or []
     }
     try:
         response = requests.post(url, json=payload, timeout=30)
@@ -293,9 +296,9 @@ def run_market_intelligence_agent():
     
     # 1. Fetch Market Indices (NIFTY 50, SENSEX, NIFTY REALTY)
     indices_data = fetch_indices_tool(session)
-    results.extend(indices_data)
     
     # 2. Fetch 12 Realty Stocks
+    results = []
     for stock in config["stocks"]:
         data = stock_data_tool(session, stock)
         if data:
@@ -324,7 +327,7 @@ def run_market_intelligence_agent():
             print(json.dumps(results, indent=2))
             sys.exit(0)
         today_sheet_name = datetime.datetime.now().strftime('%d-%m-%Y')
-        google_sheets_tool(url, results, sheet_name=today_sheet_name)
+        google_sheets_tool(url, results, indices=indices_data, sheet_name=today_sheet_name)
     elif method == "service_account":
         write_to_google_sheet_service_account(sheets_config, results)
     else:
