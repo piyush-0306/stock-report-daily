@@ -111,24 +111,81 @@ def fetch_indices_tool(session):
     except Exception as e:
         print(f"  Warning: Failed to fetch NSE indices: {e}")
 
-    # 2. Fetch SENSEX from Yahoo Finance
+    # 2. Fetch SENSEX (Multi-tier Strategy: yfinance -> Direct Yahoo API -> Moneycontrol)
+    sensex_data = None
+    
+    # Strategy A: yfinance library
     try:
         import yfinance as yf
         ticker = yf.Ticker("^BSESN")
         fast_info = ticker.fast_info
-        last_price = fast_info.last_price
-        prev_close = fast_info.previous_close
+        last_price = getattr(fast_info, 'last_price', None)
+        prev_close = getattr(fast_info, 'previous_close', None)
         if last_price and prev_close:
             change_pts = last_price - prev_close
             p_change = (change_pts / prev_close) * 100
-            indices['SENSEX'] = {
+            sensex_data = {
                 "name": "SENSEX",
                 "closing_value": round(float(last_price), 2),
                 "points_change": round(float(change_pts), 2),
                 "percent_movement": f"{round(float(p_change), 2)}%"
             }
     except Exception as e:
-        print(f"  Warning: Failed to fetch SENSEX: {e}")
+        print(f"  Warning: yfinance library failed for SENSEX: {e}")
+
+    # Strategy B: Direct Yahoo Finance Chart API (fallback if yfinance package is blocked or missing)
+    if not sensex_data:
+        try:
+            url = "https://query1.finance.yahoo.com/v8/finance/chart/%5EBSESN?interval=1d&range=2d"
+            r = session.get(url, timeout=10)
+            if r.status_code == 200:
+                meta = r.json().get('chart', {}).get('result', [{}])[0].get('meta', {})
+                price = meta.get('regularMarketPrice')
+                prev_close = meta.get('chartPreviousClose') or meta.get('previousClose')
+                if price and prev_close:
+                    change_pts = price - prev_close
+                    p_change = (change_pts / prev_close) * 100
+                    sensex_data = {
+                        "name": "SENSEX",
+                        "closing_value": round(float(price), 2),
+                        "points_change": round(float(change_pts), 2),
+                        "percent_movement": f"{round(float(p_change), 2)}%"
+                    }
+        except Exception as e:
+            print(f"  Warning: Direct Yahoo API failed for SENSEX: {e}")
+
+    # Strategy C: Moneycontrol Sensex Webpage Scraping (fallback if Yahoo APIs fail)
+    if not sensex_data:
+        try:
+            url = "https://www.moneycontrol.com/indian-indices/bsesensex-4.html"
+            r = session.get(url, timeout=10)
+            if r.status_code == 200:
+                soup = BeautifulSoup(r.text, 'html.parser')
+                ind_elem = soup.find("div", {"class": "indimprice"})
+                if ind_elem:
+                    full_text = ind_elem.text.strip()
+                    nums = re.findall(r"[\d,]+\.\d+", full_text)
+                    pchange_match = re.search(r"\(([-+]?\d+\.\d+)%\)", full_text)
+                    if len(nums) >= 2 and pchange_match:
+                        last_price = float(nums[0].replace(",", ""))
+                        change_pts = float(nums[1].replace(",", ""))
+                        p_change = pchange_match.group(1)
+                        if "-" in full_text and not p_change.startswith("-"):
+                            change_pts = -abs(change_pts)
+                            p_change = f"-{p_change}"
+                        sensex_data = {
+                            "name": "SENSEX",
+                            "closing_value": round(last_price, 2),
+                            "points_change": round(change_pts, 2),
+                            "percent_movement": f"{p_change}%"
+                        }
+        except Exception as e:
+            print(f"  Warning: Moneycontrol scraping failed for SENSEX: {e}")
+
+    if sensex_data:
+        indices['SENSEX'] = sensex_data
+    else:
+        print("  Warning: All SENSEX fetch strategies failed.")
 
     order = ['NIFTY 50', 'SENSEX', 'NIFTY REALTY']
     return [indices[k] for k in order if k in indices]
