@@ -106,7 +106,7 @@ def fetch_indices_tool(session):
                         "name": iname,
                         "closing_value": last_val,
                         "points_change": var_val,
-                        "percent_movement": f"{pct_val}%"
+                        "percent_movement": pct_val
                     }
     except Exception as e:
         print(f"  Warning: Failed to fetch NSE indices: {e}")
@@ -128,7 +128,7 @@ def fetch_indices_tool(session):
                 "name": "SENSEX",
                 "closing_value": round(float(last_price), 2),
                 "points_change": round(float(change_pts), 2),
-                "percent_movement": f"{round(float(p_change), 2)}%"
+                "percent_movement": round(float(p_change), 2)
             }
     except Exception as e:
         print(f"  Warning: yfinance library failed for SENSEX: {e}")
@@ -149,7 +149,7 @@ def fetch_indices_tool(session):
                         "name": "SENSEX",
                         "closing_value": round(float(price), 2),
                         "points_change": round(float(change_pts), 2),
-                        "percent_movement": f"{round(float(p_change), 2)}%"
+                        "percent_movement": round(float(p_change), 2)
                     }
         except Exception as e:
             print(f"  Warning: Direct Yahoo API failed for SENSEX: {e}")
@@ -169,15 +169,15 @@ def fetch_indices_tool(session):
                     if len(nums) >= 2 and pchange_match:
                         last_price = float(nums[0].replace(",", ""))
                         change_pts = float(nums[1].replace(",", ""))
-                        p_change = pchange_match.group(1)
-                        if "-" in full_text and not p_change.startswith("-"):
+                        p_change_val = float(pchange_match.group(1))
+                        if "-" in full_text and p_change_val > 0:
                             change_pts = -abs(change_pts)
-                            p_change = f"-{p_change}"
+                            p_change_val = -abs(p_change_val)
                         sensex_data = {
                             "name": "SENSEX",
                             "closing_value": round(last_price, 2),
                             "points_change": round(change_pts, 2),
-                            "percent_movement": f"{p_change}%"
+                            "percent_movement": round(p_change_val, 2)
                         }
         except Exception as e:
             print(f"  Warning: Moneycontrol scraping failed for SENSEX: {e}")
@@ -375,7 +375,7 @@ def run_market_intelligence_agent():
             results.append({
                 "name": stock["name"],
                 "closing_rate": data["price"],
-                "percent_movement": f"{data['change_percent']}%",
+                "percent_movement": data["change_percent"],
                 "market_cap_cr": data["market_cap_cr"]
             })
         time.sleep(2.0) # Politeness delay between requests
@@ -396,8 +396,9 @@ def run_market_intelligence_agent():
             print("\nFetched Stock Data:")
             print(json.dumps(results, indent=2))
             sys.exit(0)
-        today_sheet_name = datetime.datetime.now().strftime('%d-%m-%Y')
-        google_sheets_tool(url, results, indices=indices_data, sheet_name=today_sheet_name)
+        custom_sheet_name = sheets_config.get("sheet_name")
+        target_sheet_name = custom_sheet_name if (custom_sheet_name and custom_sheet_name != "Sheet1") else datetime.datetime.now().strftime('%d-%m-%Y')
+        google_sheets_tool(url, results, indices=indices_data, sheet_name=target_sheet_name)
     elif method == "service_account":
         write_to_google_sheet_service_account(sheets_config, results)
     else:
