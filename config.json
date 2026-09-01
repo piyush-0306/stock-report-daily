@@ -63,7 +63,7 @@
   ],
   "google_sheets": {
     "method": "web_app",
-    "web_app_url": "https://script.google.com/macros/s/AKfycby-NtxJoFZcRI2hoKTG9CRw-Xjexsh-eiZOm1M8fEZ3bRtM4MKbOi-F5D-1bdnETPk/exec",
+    "web_app_url": "https://script.google.com/a/macros/massdesigns.in/s/AKfycbwKKLUxPUroyjNQzZUXn78PHRgSQ_BHM5j3vD3QzDgjOgD_XtD5mWcR1VVIEnbfvAOR5w/exec",
     "service_account_json_path": "credentials.json",
     "spreadsheet_name": "Bangalore Realty Stocks Tracker",
     "sheet_name": "Sheet1"
