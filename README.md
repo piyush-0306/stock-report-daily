@@ -104,37 +104,51 @@ This method is the simplest because it **does not require creating a Google Clou
 ```javascript
 function doPost(e) {
   try {
-    var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
     var payload = JSON.parse(e.postData.contents);
-    var rows = payload.data;
     
-    // Create headers if the sheet is empty
-    if (sheet.getLastRow() === 0) {
+    var targetSheetName = payload.sheet_name || "Sheet1";
+    var sheet = ss.getSheetByName(targetSheetName);
+    if (!sheet) {
+      sheet = ss.insertSheet(targetSheetName);
+    }
+    sheet.clear();
+    
+    var rows = payload.data || [];
+    var indices = payload.indices || [];
+    
+    if (indices && indices.length > 0) {
+      sheet.appendRow(["MARKET INDICES SUMMARY"]);
+      sheet.getRange(sheet.getLastRow(), 1).setFontWeight("bold").setFontSize(11);
+      sheet.appendRow(["Index Name", "Closing Value", "Points Change", "% Movement"]);
+      var idxHeaderRange = sheet.getRange(sheet.getLastRow(), 1, 1, 4);
+      idxHeaderRange.setFontWeight("bold").setBackground("#D9E1F2");
+      for (var j = 0; j < indices.length; j++) {
+        var idx = indices[j];
+        sheet.appendRow([idx.name, idx.closing_value, idx.points_change, idx.percent_movement]);
+      }
+      sheet.appendRow([""]);
+    }
+    
+    sheet.appendRow(["REALTY STOCKS DATA"]);
+    sheet.getRange(sheet.getLastRow(), 1).setFontWeight("bold").setFontSize(11);
+    var stockHeaders = ["Company Name", "Closing Rate (Rs)", "% Movement", "Market Cap (Rs. Cr)"];
+    sheet.appendRow(stockHeaders);
+    var stockHeaderRange = sheet.getRange(sheet.getLastRow(), 1, 1, stockHeaders.length);
+    stockHeaderRange.setFontWeight("bold").setBackground("#1F4E79").setFontColor("#FFFFFF");
+    
+    for (var k = 0; k < rows.length; k++) {
+      var st = rows[k];
       sheet.appendRow([
-        "Date", 
-        "Time", 
-        "Symbol", 
-        "Company Name", 
-        "Closing Rate (Rs)", 
-        "Change Amount (Rs)", 
-        "Percentage Movement", 
-        "Market Cap (Cr)"
+        st.name || st.company || "",
+        st.closing_rate || st.price || 0,
+        st.percent_movement || st.change_percent || 0,
+        st.market_cap_cr || 0
       ]);
     }
     
-    // Append rows
-    for (var i = 0; i < rows.length; i++) {
-      var r = rows[i];
-      sheet.appendRow([
-        r.date,
-        r.time,
-        r.symbol,
-        r.name,
-        r.closing_rate,
-        r.change_amount,
-        r.percent_movement,
-        r.market_cap_cr
-      ]);
+    for (var c = 1; c <= 4; c++) {
+      sheet.autoResizeColumn(c);
     }
     
     return ContentService.createTextOutput(JSON.stringify({

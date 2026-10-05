@@ -65,7 +65,8 @@
     "method": "web_app",
     "web_app_url": "https://script.google.com/macros/s/AKfycbwKKLUxPUroyjNQzZUXn78PHRgSQ_BHM5j3vD3QzDgjOgD_XtD5mWcR1VVIEnbfvAOR5w/exec",
     "service_account_json_path": "credentials.json",
-    "spreadsheet_name": "Realty Pulse - Sept",
+    "spreadsheet_name": "Realty Pulse - Oct",
+    "spreadsheet_url": "https://docs.google.com/spreadsheets/d/1YmbT6-Wj21ztWDzJVHz9jHv_a_ehvFCjLGk0sCWAdgk/edit?usp=sharing",
     "sheet_name": "Sheet1"
   }
 }
